@@ -2,6 +2,7 @@
 
 DEFAULT_IMAGE="${SALT_PREFIX:-"archlinux"}"
 SALT_ENV="${SALT_ENV:-"base"}"
+PILLAR_ENV="${PILLAR_ENV:-"base"}"
 SALT_MASTER="${SALT_MASTER:-"salt.pie.cri.epita.net"}"
 ANNOUNCE_URL="http://10.224.4.198:8000/annouce"
 
@@ -148,9 +149,11 @@ call_salt() {
 
 	run_chroot "echo 'caller: arch_creator' > /etc/salt/grains"
 
+	KEEP_OUTPUT=true
 	run_chroot "salt-call --retcode-passthrough" \
 		"--id ${IMAGE_NAME}-arch_creator state.highstate" \
-		"saltenv=${SALT_ENV}"
+		"saltenv=${SALT_ENV} pillarenv=${PILLAR_ENV}"
+	KEEP_OUTPUT=false
 
 	run_chroot_unless '[ ! -f /etc/salt/grains ]' "rm /etc/salt/grains"
 
@@ -278,6 +281,7 @@ while true; do
 			;;
 		-e|--environment)
 			SALT_ENV="$2"
+			PILLAR_ENV="$2"
 			shift 2
 			;;
 		-m|--master)
