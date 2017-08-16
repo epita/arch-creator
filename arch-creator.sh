@@ -275,7 +275,7 @@ while true; do
 			;;
 		-d|--debug)
 			DEBUG=true
-			SALT_MASTER="127.0.0.1"
+			SALT_MASTER="${SALT_MASTER:-"127.0.0.1"}"
 			MKSQUASHFS_OPTIONS="${MKSQUASHFS_OPTIONS_DEBUG}"
 			shift
 			;;
