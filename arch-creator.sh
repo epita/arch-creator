@@ -4,7 +4,7 @@ DEFAULT_IMAGE="${SALT_PREFIX:-"archlinux"}"
 SALT_ENV="${SALT_ENV:-"base"}"
 PILLAR_ENV="${PILLAR_ENV:-"base"}"
 SALT_MASTER="${SALT_MASTER:-"salt.pie.cri.epita.net"}"
-ANNOUNCE_URL="http://10.224.4.198:8000/annouce"
+ANNOUNCE_URL="http://torrent.pie.cri.epita.net:8000/announce"
 
 MKSQUASHFS_OPTIONS="-comp xz"
 MKSQUASHFS_OPTIONS_DEBUG="-comp gzip -noI -noD -noF -noX"
