@@ -9,8 +9,6 @@ ANNOUNCE_URL="http://torrent.pie.cri.epita.net:8000/announce"
 MKSQUASHFS_OPTIONS="-comp xz"
 MKSQUASHFS_OPTIONS_DEBUG="-comp gzip -noI -noD -noF -noX"
 
-TORRENT_CONTENT_NAME="filesystem.squashfs"
-
 IMAGES_DIR="imgs"
 WORK_DIR="tmp"
 
@@ -239,13 +237,11 @@ torrent() {
 
 	cd ${IMAGES_DIR}
 	for file in `find -name "${IMAGE_NAME}.squashfs"`; do
-		run ln -f "${file}" "${TORRENT_CONTENT_NAME}"
 		torrent="${file%.squashfs}_`date +'%y%m%d_%H%M'`.torrent"
+		run ln -f "${file}" "${torrent%.torrent}.squashfs"
 		run_unless "[ ! -f '${torrent}' ]" rm "${torrent}"
 		run mktorrent -a "${ANNOUNCE_URL}" -o "${torrent}" \
-			"${TORRENT_CONTENT_NAME}"
-		run_unless "[ ! -f '${TORRENT_CONTENT_NAME}' ]" rm \
-			${TORRENT_CONTENT_NAME}
+			"${torrent%.torrent}.squashfs"
 	done
 
 	unstep
