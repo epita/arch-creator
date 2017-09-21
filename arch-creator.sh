@@ -5,6 +5,7 @@ SALT_ENV="${SALT_ENV:-"base"}"
 PILLAR_ENV="${PILLAR_ENV:-"base"}"
 SALT_MASTER="${SALT_MASTER:-"salt.pie.cri.epita.net"}"
 ANNOUNCE_URL="http://torrent.pie.cri.epita.net:8000/announce"
+WEBSEED_URL="https://ipxe.pie.cri.epita.net/filesystems/"
 
 MKSQUASHFS_OPTIONS="-comp xz"
 MKSQUASHFS_OPTIONS_DEBUG="-comp gzip -noI -noD -noF -noX"
@@ -236,8 +237,8 @@ torrent() {
 		torrent="${file%.squashfs}_`date +'%y%m%d_%H%M'`.torrent"
 		run ln -f "${file}" "${torrent%.torrent}.squashfs"
 		run_unless "[ ! -f '${torrent}' ]" rm "${torrent}"
-		run mktorrent -a "${ANNOUNCE_URL}" -o "${torrent}" \
-			"${torrent%.torrent}.squashfs"
+		run mktorrent -a "${ANNOUNCE_URL}" -w "${WEBSEED_URL} " \
+			-o "${torrent}" "${torrent%.torrent}.squashfs"
 	done
 
 	unstep
