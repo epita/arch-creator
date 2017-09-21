@@ -201,8 +201,8 @@ build() {
 	create_dirs
 	bootstrap
 	install_salt
-	call_salt
 	conf
+	call_salt
 	clean_fs
 	squashfs
 
