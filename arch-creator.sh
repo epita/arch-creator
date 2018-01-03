@@ -171,6 +171,9 @@ clean_fs() {
 	run find "${ROOTFS_DIR}/var/lib/pacman/sync" -delete
 	run find "${ROOTFS_DIR}/var/cache/pacman/pkg" -type f -delete
 
+	run echo > "${ROOTFS_DIR}/etc/machine-id"
+	run rm -f "${ROOTFS_DIR}/var/lib/dbus/machine-id"
+
 	unstep
 }
 
