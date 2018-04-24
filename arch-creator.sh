@@ -188,6 +188,19 @@ squashfs() {
 	unstep
 }
 
+# arch-chroot does not create a mount point for / by default so the root
+# directory must be already mounted before chrooting in
+mount_bind() {
+	step "Mounting ROOTFS"
+	mount --bind ${ROOTFS_DIR} ${ROOTFS_DIR}
+	unstep
+}
+
+umount_bind() {
+	step "Unmounting ROOTFS"
+	umount ${ROOTFS_DIR}
+	unstep
+}
 
 build() {
 	IMAGE_NAME=${1:-"${DEFAULT_IMAGE}"}
@@ -202,6 +215,7 @@ build() {
 	step "Building ${IMAGE_NAME}..."
 
 	create_dirs
+	mount_bind
 	bootstrap
 	install_salt
 	conf
@@ -222,6 +236,7 @@ clean() {
 
 	step "Cleaning ${IMAGE_NAME}"
 
+	umount_bind
 	run rm -rf `dirname "${ROOTFS_DIR}"`
 	run rm -rf "${IMAGES_DIR}/${IMAGE_NAME}.squashfs"
 	run rm -rf "${IMAGES_DIR}/${IMAGE_NAME}_*.torrent"
