@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 DEFAULT_IMAGE="${SALT_PREFIX:-"archlinux"}"
 SALT_ENV="${SALT_ENV:-"base"}"
