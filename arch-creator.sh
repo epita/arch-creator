@@ -3,9 +3,9 @@
 DEFAULT_IMAGE="${SALT_PREFIX:-"archlinux"}"
 SALT_ENV="${SALT_ENV:-"base"}"
 PILLAR_ENV="${PILLAR_ENV:-"base"}"
-SALT_MASTER="${SALT_MASTER:-"salt.pie.cri.epita.net"}"
-ANNOUNCE_URL="http://torrent.pie.cri.epita.net:8000/announce"
-WEBSEED_URL="https://ipxe.pie.cri.epita.net/filesystems/"
+SALT_MASTER="${SALT_MASTER:-"salt.pie.cri.epita.fr"}"
+ANNOUNCE_URL="http://torrent.pie.cri.epita.fr:8000/announce"
+WEBSEED_URL="https://ipxe.pie.cri.epita.fr/filesystems/"
 
 MKSQUASHFS_OPTIONS="-comp xz"
 MKSQUASHFS_OPTIONS_DEBUG="-comp gzip -noI -noD -noF -noX"
@@ -146,6 +146,10 @@ install_salt() {
 call_salt() {
 	step "Calling salt"
 
+	# Salt is broken with current version of openssl
+	run cp "files/openssl-1.1.0.i-1-x86_64.pkg.tar.xz" "${ROOTFS_DIR}/root"
+	run_chroot "pacman -U --noconfirm /root/openssl-1.1.0.i-1-x86_64.pkg.tar.xz"
+
 	KEEP_OUTPUT=true
 	run_chroot "salt-call --retcode-passthrough" \
 		"--id ${IMAGE_NAME}-arch_creator state.highstate" \
@@ -162,6 +166,25 @@ conf() {
 	unstep
 }
 
+gen_kernel() {
+	step "Generating kernel & initramfs"
+
+	run_chroot "pacman -Sy --noconfirm linux linux-headers git asciidoc dhclient cpio"
+	kver=$(cd "${ROOTFS_DIR}/lib/modules/"; echo [0-9]*.*-ARCH)
+
+	run_chroot_unless '[ -d "${ROOTFS_DIR}/root/dracut" ]' "git clone https://github.com/epita/dracut.git /root/dracut"
+	run cp "files/dracut-cri.conf" "${ROOTFS_DIR}/root/dracut/dracut-cri.conf"
+	run_chroot "cd /root/dracut; ./configure; make"
+	run_chroot "cd /root/dracut; ./dracut.sh -l --force --conf dracut-cri.conf /root/initramfs-linux.img ${kver} --install rngd"
+
+	run cp "${ROOTFS_DIR}/boot/vmlinuz-linux" \
+		"${IMAGES_DIR}/${IMAGE_NAME}_vmlinuz-linux"
+	run cp "${ROOTFS_DIR}/root/initramfs-linux.img" \
+		"${IMAGES_DIR}/${IMAGE_NAME}_initramfs-linux.img"
+
+	unstep
+}
+
 clean_fs() {
 	step "Cleaning filesystem"
 
@@ -170,6 +193,7 @@ clean_fs() {
 	run find "${ROOTFS_DIR}/var/lib/pacman" -maxdepth 1 -type f -delete
 	run find "${ROOTFS_DIR}/var/lib/pacman/sync" -delete
 	run find "${ROOTFS_DIR}/var/cache/pacman/pkg" -type f -delete
+	run find "${ROOTFS_DIR}/root/dracut" -type f -delete
 
 	run echo > "${ROOTFS_DIR}/etc/machine-id"
 	run rm -f "${ROOTFS_DIR}/var/lib/dbus/machine-id"
@@ -220,6 +244,7 @@ build() {
 	install_salt
 	conf
 	call_salt
+	gen_kernel
 	clean_fs
 	squashfs
 
@@ -239,7 +264,7 @@ clean() {
 	umount_bind
 	run rm -rf `dirname "${ROOTFS_DIR}"`
 	run rm -rf "${IMAGES_DIR}/${IMAGE_NAME}.squashfs"
-	run rm -rf "${IMAGES_DIR}/${IMAGE_NAME}_*.torrent"
+	run rm -rf "${IMAGES_DIR}/${IMAGE_NAME}_*"
 
 	unstep
 }
@@ -254,6 +279,10 @@ torrent() {
 	for file in `find -name "${IMAGE_NAME}.squashfs"`; do
 		torrent="${file%.squashfs}_`date +'%y%m%d_%H%M'`.torrent"
 		run ln -f "${file}" "${torrent%.torrent}.squashfs"
+		run ln -f "${file%.squashfs}_vmlinuz-linux" \
+			"${torrent%.torrent}_vmlinuz-linux"
+		run ln -f "${file%.squashfs}_initramfs-linux.img" \
+			"${torrent%.torrent}_initramfs-linux.img"
 		run_unless "[ ! -f '${torrent}' ]" rm "${torrent}"
 		run mktorrent -a "${ANNOUNCE_URL}" -w "${WEBSEED_URL} " \
 			-o "${torrent}" "${torrent%.torrent}.squashfs"
