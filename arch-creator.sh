@@ -169,7 +169,7 @@ conf() {
 gen_kernel() {
 	step "Generating kernel & initramfs"
 
-	run_chroot "pacman -Sy --noconfirm linux linux-headers git asciidoc dhclient cpio"
+	run_chroot "pacman -Sy --noconfirm --needed linux linux-headers git asciidoc dhclient cpio xz rng-tools"
 	kver=$(cd "${ROOTFS_DIR}/lib/modules/"; echo [0-9]*.*-ARCH)
 
 	run_chroot_unless '[ -d "${ROOTFS_DIR}/root/dracut" ]' "git clone https://github.com/epita/dracut.git /root/dracut"
@@ -182,6 +182,8 @@ gen_kernel() {
 	run cp "${ROOTFS_DIR}/root/initramfs-linux.img" \
 		"${IMAGES_DIR}/${IMAGE_NAME}_initramfs-linux.img"
 
+	chmod +r "${IMAGES_DIR}/${IMAGE_NAME}_initramfs-linux.img"
+
 	unstep
 }
 
@@ -193,7 +195,7 @@ clean_fs() {
 	run find "${ROOTFS_DIR}/var/lib/pacman" -maxdepth 1 -type f -delete
 	run find "${ROOTFS_DIR}/var/lib/pacman/sync" -delete
 	run find "${ROOTFS_DIR}/var/cache/pacman/pkg" -type f -delete
-	run find "${ROOTFS_DIR}/root/dracut" -type f -delete
+	run rm -rf "${ROOTFS_DIR}/root/dracut"
 
 	run echo > "${ROOTFS_DIR}/etc/machine-id"
 	run rm -f "${ROOTFS_DIR}/var/lib/dbus/machine-id"
@@ -291,6 +293,26 @@ torrent() {
 	unstep
 }
 
+genkernel() {
+	IMAGE_NAME=${1:-"${DEFAULT_IMAGE}"}
+	ROOTFS_DIR="${WORK_DIR}/${IMAGE_NAME}/rootfs"
+	IMAGE_FILE="${IMAGES_DIR}/${IMAGE_NAME}.squashfs"
+
+	if [[ $EUID -ne 0 ]]; then
+	   printf "${C_RED}$0: The build command can only be run as root.${C_RESET}\n" 1>&2
+	   exit 1
+	fi
+
+	step "Generating kernel and initramfs"
+
+	create_dirs
+	mount_bind
+	bootstrap
+	gen_kernel
+
+	unstep
+}
+
 GO_SHORT="hide:m:t:"
 GO_LONG="help,ignore-failures,debug,environment,master:,tracker:"
 
@@ -345,7 +367,7 @@ done
 CMD="$1"
 shift
 case "$CMD" in
-	build|clean|torrent)
+	build|clean|torrent|genkernel)
 		$CMD "$@"
 		;;
 	*)
