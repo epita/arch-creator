@@ -146,10 +146,6 @@ install_salt() {
 call_salt() {
 	step "Calling salt"
 
-	# Salt is broken with current version of openssl
-	run cp "files/openssl-1.1.0.i-1-x86_64.pkg.tar.xz" "${ROOTFS_DIR}/root"
-	run_chroot "pacman -U --noconfirm /root/openssl-1.1.0.i-1-x86_64.pkg.tar.xz"
-
 	KEEP_OUTPUT=true
 	run_chroot "salt-call --retcode-passthrough" \
 		"--id ${IMAGE_NAME}-arch_creator state.highstate" \
