@@ -114,7 +114,7 @@ bootstrap() {
 	step "Bootstraping Archlinux"
 
 	run_unless '[ -d "${ROOTFS_DIR}/bin" ]' "pacman -Qgq base base-devel" \
-		"multilib-devel | grep -v '^linux$' | sort -u | xargs" \
+		"| grep -v '^linux$' | sort -u | xargs" \
 		"pacstrap -cd ${ROOTFS_DIR}"
 
 	unstep
