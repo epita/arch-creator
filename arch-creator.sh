@@ -275,15 +275,10 @@ torrent() {
 
 	cd ${IMAGES_DIR}
 	for file in `find -name "${IMAGE_NAME}.squashfs"`; do
-		torrent="${file%.squashfs}_`date +'%y%m%d_%H%M'`.torrent"
-		run ln -f "${file}" "${torrent%.torrent}.squashfs"
-		run ln -f "${file%.squashfs}_vmlinuz-linux" \
-			"${torrent%.torrent}_vmlinuz-linux"
-		run ln -f "${file%.squashfs}_initramfs-linux.img" \
-			"${torrent%.torrent}_initramfs-linux.img"
+		torrent="${file%.squashfs}.torrent"
 		run_unless "[ ! -f '${torrent}' ]" rm "${torrent}"
 		run mktorrent -a "${ANNOUNCE_URL}" -w "${WEBSEED_URL} " \
-			-o "${torrent}" "${torrent%.torrent}.squashfs"
+			-o "${torrent}" "${file}"
 	done
 
 	unstep
