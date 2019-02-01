@@ -5,7 +5,7 @@ SALT_ENV="${SALT_ENV:-"base"}"
 PILLAR_ENV="${PILLAR_ENV:-"base"}"
 SALT_MASTER="${SALT_MASTER:-"salt.pie.cri.epita.fr"}"
 ANNOUNCE_URL="http://torrent.pie.cri.epita.fr:8000/announce"
-WEBSEED_URL="https://ipxe.pie.cri.epita.fr/filesystems/"
+WEBSEED_URL="https://ipxe.pie.cri.epita.fr/cri-pxe-images.s3.cri.epita.fr/"
 
 MKSQUASHFS_OPTIONS="-comp xz"
 MKSQUASHFS_OPTIONS_DEBUG="-comp gzip -noI -noD -noF -noX"
