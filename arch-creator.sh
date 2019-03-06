@@ -135,6 +135,7 @@ install_salt() {
 	if ! grep "service: systemd" "${ROOTFS_DIR}/etc/salt/minion" > /dev/null 2>&1; then
 		echo "providers:" >> "${ROOTFS_DIR}/etc/salt/minion"
 		echo "  service: systemd" >> "${ROOTFS_DIR}/etc/salt/minion"
+		echo "systemd.scope: False" >> "${ROOTFS_DIR}/etc/salt/minion"
 	fi
 
 	run_mkdir "${ROOTFS_DIR}/var/log/salt"
@@ -145,6 +146,11 @@ install_salt() {
 
 call_salt() {
 	step "Calling salt"
+
+	# Salt is broken with current version of systemd
+	run_unless '[ -f "${ROOTFS_DIR}/bin/systemctl.old" ]' \
+		cp "${ROOTFS_DIR}/bin/systemctl" "${ROOTFS_DIR}/bin/systemctl.old"
+	run cp "files/systemctl-wrapper" "${ROOTFS_DIR}/bin/systemctl"
 
 	KEEP_OUTPUT=true
 	run_chroot "salt-call --retcode-passthrough" \
