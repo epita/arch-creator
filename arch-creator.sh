@@ -171,7 +171,9 @@ conf() {
 gen_kernel() {
 	step "Generating kernel & initramfs"
 
-	run_chroot "pacman -Sy --noconfirm --needed linux linux-headers git asciidoc dhclient cpio xz rng-tools"
+	run_chroot "mv /bin/systemctl.old /bin/systemctl"
+
+	run_chroot "pacman -Sy --noconfirm --needed linux linux-headers git asciidoc dhclient cpio xz rng-tools iputils"
 	kver=$(cd "${ROOTFS_DIR}/lib/modules/"; echo [0-9]*.*-ARCH)
 
 	run_chroot_unless '[ -d "${ROOTFS_DIR}/root/dracut" ]' "git clone https://github.com/epita/dracut.git /root/dracut"
@@ -185,6 +187,11 @@ gen_kernel() {
 		"${IMAGES_DIR}/${IMAGE_NAME}_initramfs-linux.img"
 
 	chmod +r "${IMAGES_DIR}/${IMAGE_NAME}_initramfs-linux.img"
+
+	# Salt is broken with current version of systemd
+	run_unless '[ -f "${ROOTFS_DIR}/bin/systemctl.old" ]' \
+		cp "${ROOTFS_DIR}/bin/systemctl" "${ROOTFS_DIR}/bin/systemctl.old"
+	run cp "files/systemctl-wrapper" "${ROOTFS_DIR}/bin/systemctl"
 
 	unstep
 }
