@@ -114,7 +114,7 @@ bootstrap() {
 	step "Bootstraping Archlinux"
 
 	run_unless '[ -d "${ROOTFS_DIR}/bin" ]' "pacman -Qgq base base-devel" \
-		"| grep -v '^linux$' | sort -u | xargs" \
+		"| grep -v '^linux' | sort -u | xargs" \
 		"pacstrap -cd ${ROOTFS_DIR}"
 
 	unstep
@@ -173,15 +173,15 @@ gen_kernel() {
 
 	run_chroot "mv /bin/systemctl.old /bin/systemctl"
 
-	run_chroot "pacman -Sy --noconfirm --needed linux linux-headers git asciidoc dhclient cpio xz rng-tools iputils"
-	kver=$(cd "${ROOTFS_DIR}/lib/modules/"; echo [0-9]*.*-ARCH)
+	run_chroot "pacman -Sy --noconfirm --needed linux-lts linux-lts-headers git asciidoc dhclient cpio xz rng-tools iputils"
+	kver=$(cd "${ROOTFS_DIR}/lib/modules/"; echo [0-9]*.*-lts)
 
 	run_chroot_unless '[ -d "${ROOTFS_DIR}/root/dracut" ]' "git clone https://github.com/epita/dracut.git /root/dracut"
 	run cp "files/dracut-cri.conf" "${ROOTFS_DIR}/root/dracut/dracut-cri.conf"
 	run_chroot "cd /root/dracut; ./configure; make"
 	run_chroot "cd /root/dracut; ./dracut.sh -l --force --conf dracut-cri.conf /root/initramfs-linux.img ${kver} --install rngd"
 
-	run cp "${ROOTFS_DIR}/boot/vmlinuz-linux" \
+	run cp "${ROOTFS_DIR}/boot/vmlinuz-linux-lts" \
 		"${IMAGES_DIR}/${IMAGE_NAME}_vmlinuz-linux"
 	run cp "${ROOTFS_DIR}/root/initramfs-linux.img" \
 		"${IMAGES_DIR}/${IMAGE_NAME}_initramfs-linux.img"
