@@ -3,6 +3,6 @@
 if [ "$1" = "--version" ]; then
 	exec /bin/systemctl.old --version | sed -E 's/systemd ([0-9]+) \(\S+\)/systemd \1/'
 else
-	exec /bin/systemctl.old $*
+	exec -a "$0" /bin/systemctl.old $*
 fi
 
