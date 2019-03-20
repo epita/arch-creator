@@ -117,6 +117,8 @@ bootstrap() {
 		"| grep -v '^linux' | sort -u | xargs" \
 		"pacstrap -cd ${ROOTFS_DIR}"
 
+	run "cp /usr/lib/locale/locale-archive ${ROOTFS_DIR}/usr/lib/locale/locale-archive"
+
 	unstep
 }
 
@@ -187,6 +189,8 @@ gen_kernel() {
 		"${IMAGES_DIR}/${IMAGE_NAME}_initramfs-linux.img"
 
 	chmod +r "${IMAGES_DIR}/${IMAGE_NAME}_initramfs-linux.img"
+
+	run_chroot "rm /root/initramfs-linux.img"
 
 	# Salt is broken with current version of systemd
 	run_unless '[ -f "${ROOTFS_DIR}/bin/systemctl.old" ]' \
