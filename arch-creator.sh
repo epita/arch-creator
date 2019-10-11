@@ -173,10 +173,16 @@ conf() {
 gen_kernel() {
 	step "Generating kernel & initramfs"
 
+
 	run_chroot "mv /bin/systemctl.old /bin/systemctl"
 
 	run_chroot "pacman -Sy --noconfirm --needed linux-lts linux-lts-headers git asciidoc dhclient cpio xz rng-tools iputils"
 	kver=$(cd "${ROOTFS_DIR}/lib/modules/"; echo [0-9]*.*-lts)
+
+	# arping is broken with current version of iputils
+	ARPING_PKG="iputils-20180629.f6aac8d-4-x86_64.pkg.tar.xz"
+	run cp "files/${ARPING_PKG}" "${ROOTFS_DIR}/root"
+	run_chroot "pacman -U --noconfirm /root/${ARPING_PKG}"
 
 	run_chroot_unless '[ -d "${ROOTFS_DIR}/root/dracut" ]' "git clone https://github.com/epita/dracut.git /root/dracut"
 	run cp "files/dracut-cri.conf" "${ROOTFS_DIR}/root/dracut/dracut-cri.conf"
